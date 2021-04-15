@@ -1,30 +1,99 @@
 const express = require("express");
 const app = express();
-const { initGenesisBlock, addNode, addNodeToNetwork } = require("./helper");
 const httpServer = require("http").Server(app);
 const sio = require("socket.io")(httpServer);
 const sio_client = require("socket.io-client");
 const axios = require("axios");
+const { socketEventManager } = require("./helper");
+const { userInfo } = require("os");
+const Block = require("./models/Block");
 
 // declaring variables
-const storageURL = `http://${host}:3000`;
-const port = process.env.PORT;
 const host = "localhost";
+const port = process.env.PORT;
+const storageURL = `http://${host}:4000`;
 let blockChain = [];
+let transactions = [];
 
 // Adding Middlewares
 app.use(express.json());
 
+app.post("/addLink", (req, res) => {
+  const { host, port } = req.body;
+  const node = `http://${host}:${port}`;
+  socketEventManager(sio_client(node), transactions, blockChain, sio);
+});
+
 // Add Transaction
 app.post("/transaction", (req, res) => {
-  res.json(req.body);
+  transaction = req.body;
+  sio.emit("ADD_TRANSACTION", JSON.stringify(transaction));
+  res.json({ message: "transaction success" }).end();
+});
+
+app.get("/transaction", (req, res) => {
+  res.json(transactions);
+});
+
+// Event Manager
+app.get("/event", (req, res) => {
+  sio.emit("logme", "I am " + port);
+  console.log("here");
+  res.end();
 });
 
 // Get chain
 app.get("/chain", (req, res) => {
-  return res.json({ chain: blockchain });
+  return res.json({ chain: blockChain });
+});
+
+// Node addition
+const convURL = ({ host, port }) => `http://${host}:${port}`;
+
+async function addNode(socketNode, node) {
+  socketEventManager(socketNode, transactions, blockChain, sio);
+  if (node.port == port && node.host == host) return;
+  await axios.post(convURL(node) + "/addLink", {
+    host,
+    port,
+  });
+}
+
+function initGenesisBlock() {
+  return [new Block("asda", [])];
+  // return [
+  //   {
+  //     transactions: [],
+  //     previousBlockHeaderHash: "BlockChain",
+  //   },
+  // ];
+}
+
+async function addNodeToNetwork() {
+  await axios.post(storageURL + "/nodes", {
+    host,
+    port,
+  });
+  const nodeList = await axios.get(storageURL + "/nodes");
+  // if (nodeList.data.length == 1) {
+  blockChain = initGenesisBlock();
+  // } else {
+  //   const node = nodeList.data[0];
+  //   const nodeURL = convURL(node) + "/chain";
+  //   const resp = await axios.get(nodeURL);
+  //   blockchain = resp.data.chain;
+  // }
+  nodeList.data.forEach(({ host, port }) =>
+    addNode(sio_client(convURL({ host, port })), { host, port })
+  );
+}
+
+sio.on("connection", (socket) => {
+  console.info(`New Node connected, ID: ${socket.id}`);
+  socket.on("disconnect", () => {
+    console.log(`New Node disconnected, ID: ${socket.id}`);
+  });
 });
 
 addNodeToNetwork();
-
-app.listen(port, () => console.log(`Node instantiated at ${port}`));
+httpServer.listen(port, () => console.log(`Node instantiated at ${port}`));

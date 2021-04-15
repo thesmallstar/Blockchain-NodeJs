@@ -1,31 +1,44 @@
-const SHA256 = require("crypto-js/sha256");
+const Transaction = require("./models/Transaction");
+const Block = require("./models/Block");
 
-function addNode(name,port){
+const socketEventManager = (socket, transactions, blockChain, sio) => {
+  socket.on("logme", (msg) => {
+    console.log(msg);
+  });
 
-}
-
-async function addNodeToNetwork(blockChain, storageURL) {
-    const nodeList = await axios.get(storageURL + "/nodes");
-    await axios.post(storageURL + "/nodes", {
-      host,
-      port,
-    });
-    if (length(nodeList.data) == 0) {
-      blockChain = initGenesisBlock();
-    } else {
-      const { host, port } = nodeList.data[0];
-      const resp = await axios.get("http://" + host + ":" + port + "/nodes");
-      blockchain = resp.data.chain;
-    }
-  
-    nodeList.data.forEach((node) => addNode(sio_client(node), sio));
+  function timeout(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
-  
 
-const hasher = (data) => {
-    const hash = SHA256(JSON.stringify(data)).toString();
-    console.log(hash);
-    return hash;
-}
+  socket.on("ADD_TRANSACTION", async (transaction) => {
+    console.log("Recieved transaction " + transaction);
+    const { userA, userB, payLoad, signature } = JSON.parse(transaction);
+    transactions.push(new Transaction(userA, userB, payLoad, signature));
+    process.env.stop = "false";
+    if (transactions.length >= 1) {
+      await timeout(Math.floor(Math.random() * 1000));
+      console.log("I entered here");
+      console.log(process.env.stop);
+      if (process.env.stop == "false") {
+        process.env.stop = "true";
+        console.log("ohma");
+        console.log(blockChain);
+        lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();
+        blockChain.push(new Block(lastBlockHash, transactions));
+        sio.emit("STOP", JSON.stringify(blockChain));
+      }
+    }
+  });
 
-module.exports = {addNode, hasher};
+  socket.on("STOP", (newBlockChain) => {
+    blockChain = JSON.parse(newBlockChain);
+    console.log("huuhaa");
+    console.log(blockChain);
+    process.env.stop = "true";
+    transactions = [];
+  });
+
+  return socket;
+};
+
+module.exports = { socketEventManager };

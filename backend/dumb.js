@@ -1,5 +1,3 @@
-
-
 const BlockChain = require('./models/chain');
 
 const blockChain = new BlockChain(null, io);
