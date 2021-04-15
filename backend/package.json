@@ -1,0 +1,25 @@
+{
+  "name": "blockchain-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thesmallstar/Blockchain-NodeJs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thesmallstar/Blockchain-NodeJs/issues"
+  },
+  "homepage": "https://github.com/thesmallstar/Blockchain-NodeJs#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "crypto": "^1.0.1",
+    "socket.io": "^4.0.1",
+    "socket.io-client": "^4.0.1"
+  }
+}
