@@ -2,9 +2,6 @@ const Transaction = require("./models/Transaction");
 const Block = require("./models/Block");
 
 const socketEventManager = (socket, transactions, blockChain, sio) => {
-  socket.on("logme", (msg) => {
-    console.log(msg);
-  });
 
   function timeout(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));

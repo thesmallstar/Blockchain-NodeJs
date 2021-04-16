@@ -35,12 +35,6 @@ app.get("/transaction", (req, res) => {
   res.json(transactions);
 });
 
-// Event Manager
-app.get("/event", (req, res) => {
-  sio.emit("logme", "I am " + port);
-  console.log("here");
-  res.end();
-});
 
 // Get chain
 app.get("/chain", (req, res) => {
