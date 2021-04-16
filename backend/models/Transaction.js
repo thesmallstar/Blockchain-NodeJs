@@ -1,8 +1,8 @@
 class Transaction {
-  constructor(userA, userB, payLoad, signature) {
+  constructor(userA, userB, payload, signature) {
     this.userA = userA;
     this.userB = userB;
-    this.payLoad = payLoad;
+    this.payload = payload;
     this.signature = signature;
   }
 }

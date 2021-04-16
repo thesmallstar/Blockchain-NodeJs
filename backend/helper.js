@@ -8,8 +8,8 @@ const socketEventManager = (socket, transactions, blockChain, sio) => {
 
   socket.on("ADD_TRANSACTION", async (transaction) => {
     console.log("Recieved transaction " + transaction);
-    const { userA, userB, payLoad, signature } = JSON.parse(transaction);
-    transactions.push(new Transaction(userA, userB, payLoad, signature));
+    const { userA, userB, payload, signature } = JSON.parse(transaction);
+    transactions.push(new Transaction(userA, userB, payload, signature));
     process.env.stop = "false";
     if (transactions.length >= 1) {
       await timeout(Math.floor(Math.random() * 1000));
