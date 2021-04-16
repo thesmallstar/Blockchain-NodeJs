@@ -32,7 +32,7 @@ class Block {
     });
     this.timeStamp = timeStamp;
     this.blockDataHash = blockDataHash;
-    console.log(hasher(this.transactions), blockDataHash);
+    //  console.log(hasher(this.transactions), blockDataHash);
   }
 }
 module.exports = Block;

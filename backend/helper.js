@@ -11,7 +11,7 @@ const socketEventManager = (socket, transactions, blockChain, sio) => {
     const { userA, userB, payload, signature } = JSON.parse(transaction);
     transactions.push(new Transaction(userA, userB, payload, signature));
     process.env.stop = "false";
-    if (transactions.length >= 1) {
+    if (transactions.length >= 2) {
       await timeout(Math.floor(Math.random() * 1000));
       if (process.env.stop == "false") {
         process.env.stop = "true";

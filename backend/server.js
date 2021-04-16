@@ -62,7 +62,7 @@ async function addNode(socketNode, node) {
 }
 
 function initGenesisBlock() {
-  return new Block("asda", []);
+  return new Block("Genesis Block", []);
 }
 
 async function addNodeToNetwork() {
