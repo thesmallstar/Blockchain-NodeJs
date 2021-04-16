@@ -17,25 +17,19 @@ const socketEventManager = (socket, transactions, blockChain, sio) => {
     process.env.stop = "false";
     if (transactions.length >= 1) {
       await timeout(Math.floor(Math.random() * 1000));
-      console.log("I entered here");
-      console.log(process.env.stop);
       if (process.env.stop == "false") {
         process.env.stop = "true";
-        console.log("ohma");
-        console.log(blockChain);
-        lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();
-        blockChain.push(new Block(lastBlockHash, transactions));
-        sio.emit("STOP", JSON.stringify(blockChain));
+        lastBlockHash = "Donot work now!";
+        block = new Block(lastBlockHash, transactions);
+        sio.emit("STOP", block);
       }
     }
   });
 
-  socket.on("STOP", (newBlockChain) => {
-    blockChain = JSON.parse(newBlockChain);
-    console.log("huuhaa");
-    console.log(blockChain);
+  socket.on("STOP", (block) => {
+    blockChain.push(block);
     process.env.stop = "true";
-    transactions = [];
+    transactions.length = 0;
   });
 
   return socket;
