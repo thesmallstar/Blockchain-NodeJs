@@ -14,6 +14,7 @@ app.post("/nodes", (req, res) => {
     port: req.body.port,
   };
   nodes.push(newNode);
+  console.log("New Node added on port", req.body.port);
   res.json({ success: true });
 });
 
@@ -21,4 +22,6 @@ app.get("/nodes", (req, res) => {
   return res.json(nodes);
 });
 
-app.listen(port, () => console.log(`Node instantiated at ${port}`));
+app.listen(port, () =>
+  console.log(`Node Assignment Service instantiated at ${port}`)
+);

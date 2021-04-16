@@ -5,19 +5,27 @@ const sio = require("socket.io")(httpServer);
 const sio_client = require("socket.io-client");
 const axios = require("axios");
 const { socketEventManager } = require("./helper");
-const { userInfo } = require("os");
 const Block = require("./models/Block");
 
 // declaring variables
 const host = "localhost";
 const port = process.env.PORT;
 const storageURL = `http://${host}:4000`;
-let blockChain = [];
-let transactions = [];
+const blockChain = [];
+const transactions = [];
+
+// If no port is provided the process quits
+if (!port) {
+  console.log("Please provide a port for the node to be instantiated");
+  process.exit(1);
+}
 
 // Adding Middlewares
 app.use(express.json());
 
+/*---------------- ROUTES -----------------*/
+
+// Add a node link
 app.post("/addLink", (req, res) => {
   const { host, port } = req.body;
   const node = `http://${host}:${port}`;
@@ -31,19 +39,19 @@ app.post("/transaction", (req, res) => {
   res.json({ message: "transaction success" }).end();
 });
 
+// Get a list of transactions
 app.get("/transaction", (req, res) => {
   res.json(transactions);
 });
-
 
 // Get chain
 app.get("/chain", (req, res) => {
   return res.json({ chain: blockChain });
 });
 
-// Node addition
 const convURL = ({ host, port }) => `http://${host}:${port}`;
 
+// Node addition
 async function addNode(socketNode, node) {
   socketEventManager(socketNode, transactions, blockChain, sio);
   if (node.port == port && node.host == host) return;
@@ -54,13 +62,7 @@ async function addNode(socketNode, node) {
 }
 
 function initGenesisBlock() {
-  return [new Block("asda", [])];
-  // return [
-  //   {
-  //     transactions: [],
-  //     previousBlockHeaderHash: "BlockChain",
-  //   },
-  // ];
+  return new Block("asda", []);
 }
 
 async function addNodeToNetwork() {
@@ -69,14 +71,19 @@ async function addNodeToNetwork() {
     port,
   });
   const nodeList = await axios.get(storageURL + "/nodes");
-  // if (nodeList.data.length == 1) {
-  blockChain = initGenesisBlock();
-  // } else {
-  //   const node = nodeList.data[0];
-  //   const nodeURL = convURL(node) + "/chain";
-  //   const resp = await axios.get(nodeURL);
-  //   blockchain = resp.data.chain;
-  // }
+  if (nodeList.data.length == 1) {
+    blockChain.push(initGenesisBlock());
+  } else {
+    const node = nodeList.data[0];
+    const nodeURL = convURL(node) + "/chain";
+    const resp = await axios.get(nodeURL);
+    const constructedChain = resp.data.chain.map((chainBlock) => {
+      const block = new Block();
+      block.copyFrom(chainBlock);
+      return block;
+    });
+    blockChain.push(...constructedChain);
+  }
   nodeList.data.forEach(({ host, port }) =>
     addNode(sio_client(convURL({ host, port })), { host, port })
   );
@@ -85,7 +92,7 @@ async function addNodeToNetwork() {
 sio.on("connection", (socket) => {
   console.info(`New Node connected, ID: ${socket.id}`);
   socket.on("disconnect", () => {
-    console.log(`New Node disconnected, ID: ${socket.id}`);
+    console.log(`Node disconnected, ID: ${socket.id}`);
   });
 });
 
