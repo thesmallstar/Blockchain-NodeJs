@@ -23,6 +23,22 @@ if (!port) {
 // Adding Middlewares
 app.use(express.json());
 
+//add handlebars
+const exphbs = require("express-handlebars");
+app.engine(
+  "hbs",
+  exphbs({
+    extname: ".hbs",
+  })
+);
+app.set("view engine", "hbs");
+
+var hbs = exphbs.create({});
+
+hbs.handlebars.registerHelper("count", function (x) {
+  return x.length * 2 - 2;
+});
+
 /*---------------- ROUTES -----------------*/
 
 // Add a node link
@@ -42,6 +58,18 @@ app.post("/transaction", (req, res) => {
 // Get a list of transactions
 app.get("/transaction", (req, res) => {
   res.json(transactions);
+});
+
+app.get("/dashboard", async (req, res) => {
+  const nodeList = await axios.get(storageURL + "/nodes");
+  data = nodeList.data;
+
+  res.render("dashboard", {
+    layout: false,
+    nodes: data,
+    chain: JSON.stringify(blockChain.reverse()),
+    chainJSON: blockChain,
+  });
 });
 
 // Get chain

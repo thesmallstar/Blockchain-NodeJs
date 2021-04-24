@@ -1,0 +1,205 @@
+<!doctype HTML>
+<html>
+
+<head>
+    <title>DashBoard</title>
+    <meta charset="utf-8" />
+
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script
+        src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Easily-Readable-JSON-Data-Viewer/json-viewer/jquery.json-viewer.js"></script>
+    <link
+        href="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Easily-Readable-JSON-Data-Viewer/json-viewer/jquery.json-viewer.css"
+        rel="stylesheet" />
+    <link href="https://www.jqueryscript.net/css/jquerysctipttop.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style type="text/css">
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        textarea#json-input {
+            width: 100%;
+            height: 200px;
+        }
+    </style>
+
+
+</head>
+
+<body bgcolor="#EFF0EB">
+
+    <div class="container ">
+
+        <center>
+            <BR>
+            <p class="title mp-1 is-2" style="color: #363636;">Dashboard</p>
+            <hr style="border-top:0.1px solid #363636">
+        </center>
+
+        <div class="columns">
+            <div class="column">
+                <div class="card mt-5">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Balance
+                        </p>
+                    </header>
+
+                    <div class="card-content">
+                        <div class="content">
+                            <center> 50 coins</center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card  mt-5">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Total Nodes connected
+                        </p>
+                    </header>
+
+                    <div class="card-content">
+                        <div class="content">
+                            <center>{{nodes.length}}</center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card  mt-5">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Total Transactions
+                        </p>
+                    </header>
+
+                    <div class="card-content">
+                        <div class="content">
+                            <center>{{count chainJSON}}</center>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card mt-5">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Last updated at
+                        </p>
+                    </header>
+
+                    <div class="card-content">
+                        <div class="content">
+                            <center>4/25/2021 12:24 AM</center>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="columns">
+            <div class="column ">
+                <div class="card mt-5" style="height: 300px;">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Make Transaction
+                        </p>
+                    </header>
+
+                    <div class="card-content">
+                        <div class="content">
+                            <form>
+                                <div class="field">
+                                    <label class="label">Address</label>
+                                    <div class="control has-icons-left">
+                                        <input type="email" class="input" placeholder="e.g. http://localhost:5002"
+                                            required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa  fa-address-card"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="label">Amount</label>
+                                    <div class="control has-icons-left">
+                                        <input type="number" class="input" placeholder="e.g 20" required>
+                                        <span class="icon is-small is-left">
+                                            <i class="fa fa-btc"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="field  ">
+                                    <input type="submit" value="Pay" class="button is-primary">
+                                    </input>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card mt-5">
+                    <header class="card-header">
+                        <p class="card-header-title">
+                            Nodes in network
+                        </p>
+                    </header>
+               
+                  <div class="card-table" style=" height:250px; overflow-y: scroll;">
+                                <div class="content">
+                                    <table class="table is-fullwidth is-striped">
+                                        <tbody>
+                                          
+                                           {{#each nodes}}
+                                            <tr>
+                                              
+                                                <td width="5%"><i class="fa fa-btc"></i></td>
+                                                <td>http://{{this.host}}:{{this.port}}</td>
+                                                {{!-- <td class="level-right"><a class="button is-small is-primary" href="#">Action</a></td> --}}
+                                            </tr>
+                                             {{/each}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="card  mt-5">
+            <header class="card-header">
+                <p class="card-header-title">
+                    BlockChain
+                </p>
+            </header>
+            <div class="card">
+                <div class="card-content">
+                    <pre id="json-renderer"></pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
+</body>
+
+<script>
+
+    var ok = `{{{chain}}}`;
+    var input = eval('(' + ok + ')');
+    $('#json-renderer').json_viewer(input);
+
+
+</script>
+
+</html>
