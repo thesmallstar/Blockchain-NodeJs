@@ -2,7 +2,7 @@ const Transaction = require("./models/Transaction");
 const Block = require("./models/Block");
 
 const socketEventManager = (socket, transactions, blockChain, sio) => {
-  function timeout(ms) {
+  function mining(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
@@ -12,7 +12,7 @@ const socketEventManager = (socket, transactions, blockChain, sio) => {
     transactions.push(new Transaction(userA, userB, payload, signature));
     process.env.stop = "false";
     if (transactions.length >= 2) {
-      await timeout(Math.floor(Math.random() * 1000));
+      await mining(Math.floor(Math.random() * 1000));
       if (process.env.stop == "false") {
         process.env.stop = "true";
         lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();

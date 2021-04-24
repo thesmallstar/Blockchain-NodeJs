@@ -36,7 +36,7 @@ app.post("/addLink", (req, res) => {
 app.post("/transaction", (req, res) => {
   transaction = req.body;
   sio.emit("ADD_TRANSACTION", JSON.stringify(transaction));
-  res.json({ message: "transaction success" }).end();
+  res.json({ message: "success" }).end();
 });
 
 // Get a list of transactions
