@@ -16,7 +16,16 @@ const socketEventManager = (socket, transactions, blockChain, sio) => {
       if (process.env.stop == "false") {
         process.env.stop = "true";
         lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();
-        block = new Block(lastBlockHash, transactions);
+        block = new Block(
+          lastBlockHash,
+          transactions,
+         blockChain[blockChain.length - 1].balances
+        );
+        for (var i = 0; i < transactions.length; i++) {
+          block.balances[transactions[i].userA] -= transactions[i].payload;
+          block.balances[transactions[i].userB] += transactions[i].payload;
+        }
+        console.log(block);
         sio.emit("STOP", block);
       }
     }

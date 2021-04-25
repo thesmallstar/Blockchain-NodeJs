@@ -11,6 +11,7 @@ const Block = require("./models/Block");
 const host = "localhost";
 const port = process.env.PORT;
 const storageURL = `http://${host}:4000`;
+const myURL = `http://${host}:${port}`;
 const blockChain = [];
 const transactions = [];
 
@@ -22,6 +23,7 @@ if (!port) {
 
 // Adding Middlewares
 app.use(express.json());
+app.use(express.urlencoded());
 
 //add handlebars
 const exphbs = require("express-handlebars");
@@ -45,14 +47,32 @@ hbs.handlebars.registerHelper("count", function (x) {
 app.post("/addLink", (req, res) => {
   const { host, port } = req.body;
   const node = `http://${host}:${port}`;
+  blockChain[blockChain.length - 1].balances[node] = 100;
   socketEventManager(sio_client(node), transactions, blockChain, sio);
 });
 
 // Add Transaction
+
+app.post("/handeTransactionRequest", async (req, res) => {
+  console.log(req.body);
+  toURL = req.body.toURL;
+  toAmount = req.body.toAmount;
+  console.log(toURL, toAmount);
+  await axios.post(toURL + "/transaction", {
+    userA: myURL,
+    userB: toURL,
+    payload: parseInt(toAmount),
+    signature: "232",
+  });
+  nL = await axios.get(storageURL + "/nodes");
+  data = nL.data;
+  res.redirect("dashboard");
+});
+
 app.post("/transaction", (req, res) => {
   transaction = req.body;
   sio.emit("ADD_TRANSACTION", JSON.stringify(transaction));
-  res.json({ message: "success" }).end();
+  res.json({ success: true }).end();
 });
 
 // Get a list of transactions
@@ -67,8 +87,10 @@ app.get("/dashboard", async (req, res) => {
   res.render("dashboard", {
     layout: false,
     nodes: data,
-    chain: JSON.stringify(blockChain.reverse()),
+    chain: JSON.stringify(blockChain),
     chainJSON: blockChain,
+    balance: blockChain[blockChain.length - 1].balances[myURL],
+    myURL: myURL,
   });
 });
 
@@ -90,7 +112,9 @@ async function addNode(socketNode, node) {
 }
 
 function initGenesisBlock() {
-  return new Block("Genesis Block", []);
+  balances = {};
+  balances[myURL] = 100;
+  return new Block("Genesis Block", [], balances);
 }
 
 async function addNodeToNetwork() {
@@ -111,6 +135,7 @@ async function addNodeToNetwork() {
       return block;
     });
     blockChain.push(...constructedChain);
+    blockChain[blockChain.length - 1].balances[myURL] = 100;
   }
   nodeList.data.forEach(({ host, port }) =>
     addNode(sio_client(convURL({ host, port })), { host, port })

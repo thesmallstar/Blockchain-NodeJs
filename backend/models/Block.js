@@ -7,11 +7,12 @@ const hasher = (data) => {
 };
 
 class Block {
-  constructor(previousBlockHeaderHash, transactions) {
+  constructor(previousBlockHeaderHash, transactions, balances) {
     this.previousBlockHeaderHash = previousBlockHeaderHash;
     this.transactions = transactions;
     this.timeStamp = Date.now();
     this.blockDataHash = hasher(transactions);
+    this.balances = balances;
   }
 
   getHeaderHash() {
@@ -24,6 +25,7 @@ class Block {
     transactions,
     timeStamp,
     blockDataHash,
+    balances,
   }) {
     this.previousBlockHeaderHash = previousBlockHeaderHash;
     this.transactions = transactions.map((recTransaction) => {
@@ -32,6 +34,7 @@ class Block {
     });
     this.timeStamp = timeStamp;
     this.blockDataHash = blockDataHash;
+    this.balances = JSON.parse(JSON.stringify(balances));
     //  console.log(hasher(this.transactions), blockDataHash);
   }
 

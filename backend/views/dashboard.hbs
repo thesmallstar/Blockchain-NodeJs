@@ -51,7 +51,7 @@
 
                     <div class="card-content">
                         <div class="content">
-                            <center> 50 coins</center>
+                            <center> {{balance}} coins</center>
                         </div>
                     </div>
                 </div>
@@ -97,7 +97,6 @@
                     <div class="card-content">
                         <div class="content">
                             <center>4/25/2021 12:24 AM</center>
-
                         </div>
                     </div>
                 </div>
@@ -116,11 +115,11 @@
 
                     <div class="card-content">
                         <div class="content">
-                            <form>
+                            <form method="POST" action="/handeTransactionRequest">
                                 <div class="field">
                                     <label class="label">Address</label>
                                     <div class="control has-icons-left">
-                                        <input type="email" class="input" placeholder="e.g. http://localhost:5002"
+                                        <input name="toURL" class="input" placeholder="e.g. http://localhost:5002"
                                             required>
                                         <span class="icon is-small is-left">
                                             <i class="fa  fa-address-card"></i>
@@ -130,7 +129,7 @@
                                 <div class="field">
                                     <label class="label">Amount</label>
                                     <div class="control has-icons-left">
-                                        <input type="number" class="input" placeholder="e.g 20" required>
+                                        <input name="toAmount" type="number" class="input" placeholder="e.g 20" required>
                                         <span class="icon is-small is-left">
                                             <i class="fa fa-btc"></i>
                                         </span>
