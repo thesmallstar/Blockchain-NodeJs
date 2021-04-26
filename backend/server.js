@@ -16,6 +16,8 @@ const myURL = `http://${host}:${port}`;
 const blockChain = [];
 const transactions = [];
 const nodePublicKeys = {};
+const numberOfTransactionPerBlock = 1;
+const totalTransaction = 0;
 
 // If no port is provided the process quits
 if (!port) {
@@ -48,7 +50,7 @@ app.set("view engine", "hbs");
 var hbs = exphbs.create({});
 
 hbs.handlebars.registerHelper("count", function (x) {
-  return x.length * 2 - 2;
+  return x.length * numberOfTransactionPerBlock - numberOfTransactionPerBlock;
 });
 
 /*---------------- ROUTES -----------------*/
@@ -65,6 +67,8 @@ app.post("/addLink", (req, res) => {
     transactions,
     blockChain,
     nodePublicKeys,
+    numberOfTransactionPerBlock,
+    totalTransaction,
     sio
   );
   res.send({ key: publicKeyToSend });
@@ -106,7 +110,20 @@ app.get("/transaction", (req, res) => {
 app.get("/dashboard", async (req, res) => {
   const nodeList = await axios.get(storageURL + "/nodes");
   data = nodeList.data;
-
+  date = new Date(blockChain[blockChain.length - 1].timeStamp);
+  dateString =
+    date.getDate() +
+    "/" +
+    (date.getMonth() + 1) +
+    "/" +
+    date.getFullYear() +
+    " " +
+    date.getHours() +
+    ":" +
+    date.getMinutes() +
+    ":" +
+    date.getSeconds();
+  console.log(dateString);
   res.render("dashboard", {
     layout: false,
     nodes: data,
@@ -114,6 +131,8 @@ app.get("/dashboard", async (req, res) => {
     chainJSON: blockChain,
     balance: blockChain[blockChain.length - 1].balances[myURL],
     myURL: myURL,
+    date: dateString,
+    totalTransaction: totalTransaction,
   });
 });
 
@@ -126,7 +145,15 @@ const convURL = ({ host, port }) => `http://${host}:${port}`;
 
 // Node addition
 async function addNode(socketNode, node) {
-  socketEventManager(socketNode, transactions, blockChain, nodePublicKeys, sio);
+  socketEventManager(
+    socketNode,
+    transactions,
+    blockChain,
+    nodePublicKeys,
+    numberOfTransactionPerBlock,
+    totalTransaction,
+    sio
+  );
   if (node.port == port && node.host == host) return;
   const resp = await axios.post(convURL(node) + "/addLink", {
     host,
