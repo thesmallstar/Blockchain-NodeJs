@@ -6,6 +6,7 @@ const sio_client = require("socket.io-client");
 const axios = require("axios");
 const { socketEventManager } = require("./helper");
 const Block = require("./models/Block");
+const crypto = require("crypto");
 
 // declaring variables
 const host = "localhost";
@@ -14,6 +15,7 @@ const storageURL = `http://${host}:4000`;
 const myURL = `http://${host}:${port}`;
 const blockChain = [];
 const transactions = [];
+const nodePublicKeys = {};
 
 // If no port is provided the process quits
 if (!port) {
@@ -21,12 +23,20 @@ if (!port) {
   process.exit(1);
 }
 
+//generate public private RSA keys
+const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+  modulusLength: 2048,
+});
+
+publicKeyToSend = publicKey.export({ type: "pkcs1", format: "pem" });
+nodePublicKeys[myURL] = publicKeyToSend;
 // Adding Middlewares
 app.use(express.json());
 app.use(express.urlencoded());
 
 //add handlebars
 const exphbs = require("express-handlebars");
+const { timeStamp } = require("console");
 app.engine(
   "hbs",
   exphbs({
@@ -47,25 +57,38 @@ hbs.handlebars.registerHelper("count", function (x) {
 app.post("/addLink", (req, res) => {
   const { host, port } = req.body;
   const node = `http://${host}:${port}`;
+  nodePublicKeys[node] = req.body.publicKeyToSend;
+
   blockChain[blockChain.length - 1].balances[node] = 100;
-  socketEventManager(sio_client(node), transactions, blockChain, sio);
+  socketEventManager(
+    sio_client(node),
+    transactions,
+    blockChain,
+    nodePublicKeys,
+    sio
+  );
+  res.send({ key: publicKeyToSend });
 });
 
 // Add Transaction
-
 app.post("/handeTransactionRequest", async (req, res) => {
-  console.log(req.body);
-  toURL = req.body.toURL;
-  toAmount = req.body.toAmount;
-  console.log(toURL, toAmount);
+  const { toURL, toAmount } = req.body;
+  timeStamp_ = Date.now();
+  toVerify = myURL + toURL + toAmount + timeStamp_.toString();
+
+  const signature = crypto.sign("sha256", Buffer.from(toVerify), {
+    key: privateKey,
+    padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+  });
+
   await axios.post(toURL + "/transaction", {
     userA: myURL,
     userB: toURL,
     payload: parseInt(toAmount),
-    signature: "232",
+    signature,
+    timeStamp_,
   });
-  nL = await axios.get(storageURL + "/nodes");
-  data = nL.data;
+
   res.redirect("dashboard");
 });
 
@@ -103,12 +126,16 @@ const convURL = ({ host, port }) => `http://${host}:${port}`;
 
 // Node addition
 async function addNode(socketNode, node) {
-  socketEventManager(socketNode, transactions, blockChain, sio);
+  socketEventManager(socketNode, transactions, blockChain, nodePublicKeys, sio);
   if (node.port == port && node.host == host) return;
-  await axios.post(convURL(node) + "/addLink", {
+  const resp = await axios.post(convURL(node) + "/addLink", {
     host,
     port,
+    publicKeyToSend,
   });
+
+  key = resp.data.key;
+  nodePublicKeys[convURL(node)] = key;
 }
 
 function initGenesisBlock() {
