@@ -34,7 +34,7 @@ publicKeyToSend = publicKey.export({ type: "pkcs1", format: "pem" });
 nodePublicKeys[myURL] = publicKeyToSend;
 // Adding Middlewares
 app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true }));
 
 //add handlebars
 const exphbs = require("express-handlebars");
