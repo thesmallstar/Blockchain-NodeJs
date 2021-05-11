@@ -16,7 +16,7 @@ const myURL = `http://${host}:${port}`;
 const blockChain = [];
 const transactions = [];
 const nodePublicKeys = {};
-const numberOfTransactionPerBlock = 1;
+const numberOfTransactionPerBlock = 2;
 const totalTransaction = 0;
 
 // If no port is provided the process quits
@@ -69,6 +69,7 @@ app.post("/addLink", (req, res) => {
     nodePublicKeys,
     numberOfTransactionPerBlock,
     totalTransaction,
+    myURL,
     sio
   );
   res.send({ key: publicKeyToSend });
@@ -123,7 +124,6 @@ app.get("/dashboard", async (req, res) => {
     date.getMinutes() +
     ":" +
     date.getSeconds();
-  console.log(dateString);
   res.render("dashboard", {
     layout: false,
     nodes: data,
@@ -152,6 +152,7 @@ async function addNode(socketNode, node) {
     nodePublicKeys,
     numberOfTransactionPerBlock,
     totalTransaction,
+    myURL,
     sio
   );
   if (node.port == port && node.host == host) return;

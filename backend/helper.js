@@ -9,6 +9,7 @@ const socketEventManager = (
   nodePublicKeys,
   numberOfTransactionPerBlock,
   totalTransaction,
+  currentNodeAddress,
   sio
 ) => {
   function mining(ms) {
@@ -33,6 +34,14 @@ const socketEventManager = (
     );
     return isVerified;
   }
+
+  function addReward(validTransactions, balancesCopy)
+  {
+    transaction = new Transaction('BlockChain Master', currentNodeAddress, 10, 'rewarded', Date.now());
+    validTransactions.push(transaction);
+    balancesCopy[currentNodeAddress]+=10;
+  }
+  
 
   function processTransaction(transaction, balancesCopy, validTransactions) {
     isVerified = verifySignature(transaction);
@@ -59,23 +68,26 @@ const socketEventManager = (
     transactions.push(
       new Transaction(userA, userB, payload, signature, timeStamp_)
     );
+    
     process.env.stop = "false";
     if (transactions.length >= numberOfTransactionPerBlock) {
-      await mining(Math.floor(Math.random() * 1000));
+      const validTransactions = [];
+      lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();
+      const balancesCopy = JSON.parse(
+        JSON.stringify(blockChain[blockChain.length - 1].balances)
+      );
+      for (var i = 0; i < transactions.length; i++) {
+        processTransaction(transactions[i], balancesCopy, validTransactions);
+      }
+      if (validTransactions.length == 0) {
+        return;
+      }
+      addReward(validTransactions, balancesCopy)
+      block = new Block(lastBlockHash, validTransactions, balancesCopy);
+      await block.mine();
+      // await mining(Math.floor(Math.random() * 1000));
       if (process.env.stop == "false") {
         process.env.stop = "true";
-        lastBlockHash = blockChain[blockChain.length - 1].getHeaderHash();
-        const balancesCopy = JSON.parse(
-          JSON.stringify(blockChain[blockChain.length - 1].balances)
-        );
-        const validTransactions = [];
-        for (var i = 0; i < transactions.length; i++) {
-          processTransaction(transactions[i], balancesCopy, validTransactions);
-        }
-        if (validTransactions.length == 0) {
-          return;
-        }
-        block = new Block(lastBlockHash, validTransactions, balancesCopy);
         sio.emit("STOP", block);
       }
     }
@@ -84,6 +96,7 @@ const socketEventManager = (
   socket.on("STOP", (minedBlock) => {
     const newBlock = new Block();
     newBlock.copyFrom(minedBlock);
+    if (!newBlock.verify()) return socket;
     blockChain.push(newBlock);
     totalTransaction += newBlock.transactions.length;
     process.env.stop = "true";
